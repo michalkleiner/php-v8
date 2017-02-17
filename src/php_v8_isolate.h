@@ -15,11 +15,13 @@
 
 typedef struct _php_v8_isolate_t php_v8_isolate_t;
 
+#include "php_v8_module.h"
 #include "php_v8_isolate_limits.h"
 #include "php_v8_exceptions.h"
 #include "php_v8_callbacks.h"
 #include <v8.h>
 #include <map>
+#include <stack>
 
 extern "C" {
 #include "php.h"
@@ -125,6 +127,9 @@ struct _php_v8_isolate_t {
 
     uint32_t isolate_handle;
     php_v8_isolate_limits_t limits;
+
+    std::stack<zval *> *module_resolvers;
+    std::map<int, php_v8_module_t *> *modules;
 
     zval *gc_data;
     int   gc_data_count;

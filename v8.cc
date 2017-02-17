@@ -35,6 +35,8 @@
 #include "php_v8_cached_data.h"
 #include "php_v8_compile_options.h"
 #include "php_v8_source.h"
+#include "php_v8_module.h"
+#include "php_v8_module_resolver.h"
 #include "php_v8_script_compiler.h"
 #include "php_v8_null.h"
 #include "php_v8_boolean.h"
@@ -116,6 +118,8 @@ PHP_MINIT_FUNCTION(v8)
     PHP_MINIT(php_v8_cached_data)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(php_v8_compile_options)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(php_v8_source)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(php_v8_module_resolver)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(php_v8_module)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(php_v8_script_compiler)(INIT_FUNC_ARGS_PASSTHRU);
 
     PHP_MINIT(php_v8_exception)(INIT_FUNC_ARGS_PASSTHRU);

@@ -20,6 +20,7 @@
 #include "php_v8_script.h"
 #include "php_v8_script_origin.h"
 #include "php_v8_unbound_script.h"
+#include "php_v8_module.h"
 #include "php_v8_source.h"
 #include "php_v8_function.h"
 #include "php_v8_string.h"
@@ -181,6 +182,53 @@ static PHP_METHOD(V8ScriptCompiler, Compile)
     php_v8_create_script(return_value, local_script, php_v8_context);
 }
 
+static PHP_METHOD(V8ScriptCompiler, CompileModule)
+{
+    zval rv;
+
+    zval *php_v8_context_zv;
+    zval *php_v8_source_zv;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "oo", &php_v8_context_zv, &php_v8_source_zv) == FAILURE) {
+        return;
+    }
+
+    PHP_V8_CONTEXT_FETCH_INTO(php_v8_context_zv, php_v8_context);
+
+    zval *source_string_zv = PHP_V8_SOURCE_READ_SOURCE_STRING(php_v8_source_zv);
+    zval *origin_zv        = PHP_V8_SOURCE_READ_ORIGIN(php_v8_source_zv);
+    zval *cached_data_zv   = PHP_V8_SOURCE_READ_CACHED_DATA(php_v8_source_zv);
+
+    PHP_V8_VALUE_FETCH_WITH_CHECK(source_string_zv, php_v8_source_string);
+    PHP_V8_DATA_ISOLATES_CHECK(php_v8_source_string, php_v8_context);
+
+    if (!ZVAL_IS_NULL(cached_data_zv)) {
+        PHP_V8_FETCH_CACHED_DATA_WITH_CHECK(cached_data_zv, php_v8_cached_data);
+    }
+
+    PHP_V8_ENTER_STORED_ISOLATE(php_v8_context);
+    PHP_V8_ENTER_CONTEXT(php_v8_context);
+
+    v8::ScriptCompiler::Source * source = php_v8_build_source(source_string_zv, origin_zv, cached_data_zv, isolate);
+
+    if (!source->GetResourceOptions().IsModule()) {
+        PHP_V8_THROW_EXCEPTION("Unable to compile non-module as module")
+        return;
+    }
+
+    PHP_V8_TRY_CATCH(isolate);
+    PHP_V8_INIT_ISOLATE_LIMITS_ON_CONTEXT(php_v8_context);
+
+    v8::MaybeLocal<v8::Module> maybe_module = v8::ScriptCompiler::CompileModule(isolate, source);
+
+    PHP_V8_MAYBE_CATCH(php_v8_context, try_catch);
+    PHP_V8_THROW_VALUE_EXCEPTION_WHEN_EMPTY(maybe_module, "Failed to compile module");
+
+    v8::Local<v8::Module> local_module = maybe_module.ToLocalChecked();
+
+    php_v8_create_module(return_value, php_v8_context, local_module);
+}
+
 static PHP_METHOD(V8ScriptCompiler, CompileFunctionInContext)
 {
     zval rv;
@@ -260,6 +308,11 @@ PHP_V8_ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_v8_script_compiler_Compile
                 ZEND_ARG_TYPE_INFO(0, options, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+PHP_V8_ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_v8_script_compiler_CompileModule, ZEND_RETURN_VALUE, 2, V8\\Module, 0)
+                ZEND_ARG_OBJ_INFO(0, context, V8\\Context, 0)
+                ZEND_ARG_OBJ_INFO(0, source, V8\\ScriptCompiler\\Source, 0)
+ZEND_END_ARG_INFO()
+
 PHP_V8_ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_v8_script_compiler_CompileFunctionInContext, ZEND_RETURN_VALUE, 2, V8\\FunctionObject, 0)
                 ZEND_ARG_OBJ_INFO(0, context, V8\\Context, 0)
                 ZEND_ARG_OBJ_INFO(0, source, V8\\ScriptCompiler\\Source, 0)
@@ -272,6 +325,7 @@ static const zend_function_entry php_v8_script_compiler_methods[] = {
     PHP_ME(V8ScriptCompiler, CachedDataVersionTag,      arginfo_v8_script_compiler_CachedDataVersionTag,        ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
     PHP_ME(V8ScriptCompiler, CompileUnboundScript,      arginfo_v8_script_compiler_CompileUnboundScript,        ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
     PHP_ME(V8ScriptCompiler, Compile,                   arginfo_v8_script_compiler_Compile,                     ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
+    PHP_ME(V8ScriptCompiler, CompileModule,             arginfo_v8_script_compiler_CompileModule,               ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
     PHP_ME(V8ScriptCompiler, CompileFunctionInContext,  arginfo_v8_script_compiler_CompileFunctionInContext,    ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
 
     PHP_FE_END

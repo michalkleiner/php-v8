@@ -98,9 +98,16 @@ static PHP_METHOD(V8FunctionCallbackInfo, Arguments) {
 
     array_init_size(&php_v8_callback_info->args, static_cast<uint>(php_v8_callback_info->length));
 
+    fprintf(stderr, "args length: %d\n", php_v8_callback_info->length);
+
     for (int i=0; i < php_v8_callback_info->length; i++) {
 
         local_value = v8::Local<v8::Value>::New(isolate, *php_v8_callback_info->arguments[i]);
+
+        fprintf(stderr, "args %d IsObject(): %c\n", i, local_value->IsObject() ? 'y' : 'n');
+        fprintf(stderr, "args %d IsFunction(): %c\n", i, local_value->IsFunction() ? 'y' : 'n');
+        fprintf(stderr, "args %d IsString(): %c\n", i, local_value->IsString() ? 'y' : 'n');
+
 
         php_v8_get_or_create_value(&arg_zv, local_value, isolate);
 

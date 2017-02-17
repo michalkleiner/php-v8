@@ -97,6 +97,14 @@ static HashTable * php_v8_isolate_gc(zval *object, zval **table, int *n) {
 static void php_v8_isolate_free(zend_object *object) {
     php_v8_isolate_t *php_v8_isolate = php_v8_isolate_fetch_object(object);
 
+    if (php_v8_isolate->module_resolvers) {
+        delete php_v8_isolate->module_resolvers;
+    }
+
+    if (php_v8_isolate->modules) {
+        delete php_v8_isolate->modules;
+    }
+
     php_v8_isolate_limits_free(php_v8_isolate);
 
     if (php_v8_isolate->weak_function_templates) {
@@ -157,6 +165,9 @@ static zend_object *php_v8_isolate_ctor(zend_class_entry *ce) {
     php_v8_isolate->std.handlers = &php_v8_isolate_object_handlers;
 
     php_v8_isolate_limits_ctor(php_v8_isolate);
+
+    php_v8_isolate->module_resolvers = new std::stack<zval *>();
+    php_v8_isolate->modules = new std::map<int, php_v8_module_t *>();
 
     return &php_v8_isolate->std;
 }

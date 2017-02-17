@@ -35,6 +35,8 @@ class PhpV8Helpers {
     {
         $print_func_tpl = new \V8\FunctionTemplate($isolate, function (\V8\FunctionCallbackInfo $args) use ($newline) {
 
+            echo 'called', PHP_EOL;
+            var_dump($args->Arguments());
             $context = $args->GetContext();
 
             $out = [];

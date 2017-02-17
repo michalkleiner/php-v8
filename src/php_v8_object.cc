@@ -84,6 +84,8 @@ bool php_v8_object_delete_self_ptr(v8::Isolate *isolate, v8::Local<v8::Object> l
 
 bool php_v8_object_store_self_ptr(v8::Isolate *isolate, v8::Local<v8::Object> local_object, php_v8_value_t *php_v8_value)
 {
+
+    fprintf(stderr, "InternalFieldCount: %d\n", local_object->InternalFieldCount());
     //assert(isolate->InContext())
     assert(NULL != v8::Isolate::GetCurrent());
     assert(v8::Isolate::GetCurrent()->InContext());

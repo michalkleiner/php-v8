@@ -85,6 +85,25 @@ class  ScriptCompiler
     }
 
     /**
+     * This is an unfinished experimental feature, and is only exposed
+     * here for internal testing purposes. DO NOT USE.
+     *
+     * Compile an ES module, returning a Module that encapsulates
+     * the compiled code.
+     *
+     * Corresponds to the ParseModule abstract operation in the
+     * ECMAScript specification.
+     *
+     * @param Context $context
+     * @param Source  $source
+     *
+     * @return Module
+     */
+    public static function CompileModule(Context $context, Source $source): Module
+    {
+    }
+
+    /**
      * Compile a function for a given context. This is equivalent to running
      *
      * with (obj) {
